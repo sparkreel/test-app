@@ -22,10 +22,10 @@ const MockBackend = {
     getVenue: (venue_id) => _.find(Venues, ['id', venue_id]),
     addClient: (client) => {
         if (typeof client.email != "string" || client.email === '') {
-            throw new Error('Client email missing');
+            throw new Error('Client email is missing');
         }
         if (typeof client.name != "string" || client.name === '') {
-            throw new Error('Client name missing');
+            throw new Error('Client name is missing');
         }
         client.id = _.max(Clients.map(c => c.id)) + 1;
         client.favoriteVenues = [];
@@ -33,24 +33,38 @@ const MockBackend = {
         return client;
     },
     addVenue: (venue) => {
+        if (typeof venue.name != "string" || venue.name === '') {
+            throw new Error('Venue name is missing');
+        }
         venue.id = _.max(Venues.map(c => c.id)) + 1;
         Venues.push(venue);
         return venue;
     },
-    getClientFavouriteVenues: (client_id) => {
+    getClientFavoriteVenues: (client_id) => {
         const client = MockBackend.getClient(client_id);
         return _.filter(Venues, (v) => client.favoriteVenues.includes(v.id))
     },
-    addVenueToClient: (client_id, venue_id) => {
-        const index = _.findIndex(Clients, ['id', client_id]);
-        Clients[index].favoriteVenues.push(venue_id);
-        return Clients[index];
+    addFavoriteVenueToClient: (client_id, venue_id) => {
+        const client_index = _.findIndex(Clients, ['id', client_id]);
+        if (client_index === -1) throw new Error('Client not found');
+        Clients[client_index].favoriteVenues.push(venue_id);
+        return Clients[client_index];
     },
-    removeVenueFromClient: (client_id, venue_id) => {
-        const index = _.findIndex(Clients, ['id', client_id]);
-        Clients[index].favoriteVenues = _.filter(Clients[index].favoriteVenues, i => i !== venue_id);
-        return Clients[index];
-    }
+    removeFavoriteVenueFromClient: (client_id, venue_id) => {
+        const client_index = _.findIndex(Clients, ['id', client_id]);
+        if (client_index === -1) throw new Error('Client not found');
+        Clients[client_index].favoriteVenues = _.filter(Clients[client_index].favoriteVenues, i => i !== venue_id);
+        return Clients[client_index];
+    },
+    removeVenue: (venue_id) => {
+        Clients = Clients.map(c => {
+            c.favoriteVenues = c.favoriteVenues.filter(fv => fv !== venue_id);
+            return c
+        });
+        Venues = Venues.filter(v => v.id !== venue_id);
+    },
+    removeClient: (client_id) => {Clients = Clients.filter(c => c.id !== client_id)},
+
 };
 
 export default MockBackend;
